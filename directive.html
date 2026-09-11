@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Directive">
+<meta name="theme-color" content="#14161a">
+<title>The Directive</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%2314161a'/%3E%3Ccircle cx='90' cy='90' r='46' fill='none' stroke='%23c8613f' stroke-width='9'/%3E%3Ccircle cx='90' cy='90' r='13' fill='%23c8613f'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --ink:#14161a;
+    --ink-2:#1c1f25;
+    --ink-3:#252930;
+    --line:#333841;
+    --text:#eceae6;
+    --text-2:#9aa0a9;
+    --text-3:#6c727c;
+    --mark:#c8613f;
+    --mark-soft:rgba(200,97,63,.22);
+    --ok:#7f9e7a;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden}
+  body{
+    background:var(--ink);color:var(--text);
+    font-family:ui-sans-serif,-apple-system,"SF Pro Text",Segoe UI,sans-serif;
+    font-size:16px;line-height:1.4;
+    padding:max(10px,env(safe-area-inset-top)) 12px max(10px,env(safe-area-inset-bottom));
+    display:flex;flex-direction:column;gap:8px;
+    -webkit-user-select:none;user-select:none;
+  }
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  :focus-visible{outline:2px solid var(--mark);outline-offset:2px}
+
+  /* hero */
+  .hero{position:relative;flex:0 0 auto;height:min(30vh,180px);border-radius:14px;overflow:hidden;
+        background:var(--ink-2) center/cover no-repeat;display:block}
+  .hero.empty{border:1px dashed var(--line)}
+  .hero input{display:none}
+  .hero .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+              flex-direction:column;gap:4px;color:var(--text-3);font-size:13px}
+  .hero .msg{position:absolute;left:0;right:0;bottom:0;padding:10px 12px;
+             background:linear-gradient(transparent,rgba(10,11,13,.88) 38%);
+             font-family:ui-serif,"Iowan Old Style",Georgia,serif;font-size:15px;line-height:1.35}
+  .hero .date{position:absolute;top:9px;left:12px;font-size:11px;color:var(--text-2);
+              text-shadow:0 1px 3px rgba(0,0,0,.6)}
+  .shots{position:absolute;top:8px;right:8px;display:flex;gap:6px}
+  .shot{width:44px;height:56px;border-radius:8px;border:1px dashed var(--line);background:rgba(10,11,13,.5) center/cover no-repeat;
+        display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text-2);text-align:center;line-height:1.1}
+  .shot input{display:none}
+
+  /* tiles */
+  .grid{flex:1 1 auto;display:grid;grid-template-columns:1fr 1fr;gap:8px;min-height:0}
+  .tile{background:var(--ink-2);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between;min-height:0}
+  .tile .top{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--text-2)}
+  .tile .step{font-size:10px;color:var(--text-3)}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .val{font-size:clamp(15px,4.6vw,20px);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .val.zero{color:var(--text-3)}
+  .pm{width:34px;height:34px;border-radius:50%;background:var(--ink-3);display:flex;align-items:center;justify-content:center;
+      font-size:19px;line-height:1;color:var(--text-2);flex:0 0 auto}
+  .pm:active{background:var(--mark);color:#fff}
+  .track{height:4px;border-radius:2px;background:var(--ink-3);overflow:hidden}
+  .fill{height:100%;width:0;background:var(--mark);transition:width .18s ease}
+  .fill.done{background:var(--ok)}
+
+  /* squats */
+  .squats{background:var(--ink-2);border-radius:12px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;flex:0 0 auto}
+  .squats span{font-size:12px;color:var(--text-2)}
+  .anchors{display:flex;gap:8px}
+  .anc{display:flex;flex-direction:column;align-items:center;gap:3px}
+  .dot{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:17px}
+  .dot.on{background:var(--mark);border-color:var(--mark);color:#fff}
+  .anc small{font-size:9px;color:var(--text-3)}
+
+  /* month */
+  .month{flex:0 0 auto}
+  .cells{display:grid;grid-template-columns:repeat(31,1fr);gap:2px}
+  .cell{height:14px;border-radius:2px;background:var(--ink-3)}
+  .cell.today{box-shadow:inset 0 0 0 1px var(--text-2)}
+  .foot{display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-top:5px}
+  .foot button{color:var(--text-3);font-size:10px;padding:2px 4px}
+
+  /* sheet */
+  .sheet{position:fixed;inset:0;background:rgba(10,11,13,.96);padding:18px 14px;display:none;flex-direction:column;gap:12px;z-index:9;overflow:auto}
+  .sheet.open{display:flex}
+  .sheet h2{font-size:15px;margin:0;font-weight:500}
+  .sheet table{width:100%;border-collapse:collapse;font-size:11px;font-variant-numeric:tabular-nums}
+  .sheet th{color:var(--text-3);font-weight:400;text-align:right;padding:4px 3px;border-bottom:1px solid var(--line)}
+  .sheet th:first-child{text-align:left}
+  .sheet td{text-align:right;padding:4px 3px;border-bottom:1px solid var(--ink-3);color:var(--text-2)}
+  .sheet td:first-child{text-align:left;color:var(--text)}
+  .sheet .acts{display:flex;gap:8px;flex-wrap:wrap}
+  .sheet .acts button{background:var(--ink-3);padding:9px 14px;border-radius:9px;font-size:13px}
+  .sheet .close{position:absolute;top:14px;right:16px;font-size:22px;color:var(--text-2)}
+  .note{font-size:11px;color:var(--text-3);line-height:1.5}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<label class="hero empty" id="hero">
+  <input type="file" accept="image/*" id="heroFile">
+  <span class="date" id="today"></span>
+  <span class="hint" id="heroHint">tap to set your goal image</span>
+  <span class="shots">
+    <label class="shot" id="shotA"><input type="file" accept="image/*"><span>day 1</span></label>
+    <label class="shot" id="shotB"><input type="file" accept="image/*" capture="user"><span>now</span></label>
+  </span>
+  <span class="msg" id="msg"></span>
+</label>
+
+<div class="grid" id="grid"></div>
+
+<div class="squats">
+  <span>Squats</span>
+  <div class="anchors" id="squats"></div>
+</div>
+
+<div class="month">
+  <div class="cells" id="cells"></div>
+  <div class="foot">
+    <span id="range"></span>
+    <button id="openSheet">history &amp; export</button>
+  </div>
+</div>
+
+<div class="sheet" id="sheet">
+  <button class="close" id="closeSheet" aria-label="Close">&times;</button>
+  <h2>History</h2>
+  <div class="acts">
+    <button id="exportBtn">Export CSV</button>
+    <button id="copyBtn">Copy CSV</button>
+    <button id="resetDay">Clear today</button>
+  </div>
+  <p class="note" id="lastExport"></p>
+  <div id="tableWrap"></div>
+  <p class="note">Everything is stored on this phone only. Nothing is uploaded. Export every few weeks so a browser cleanup can't take your history.</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var KEY='directive.v1';
+  var METRICS=[
+    {id:'steps',   label:'Steps',    step:500, goal:15000, fmt:function(v){return v.toLocaleString();}, stepLabel:'500'},
+    {id:'sleep',   label:'Sleep',    step:15,  goal:480,   fmt:hm, stepLabel:'15 min'},
+    {id:'calories',label:'Calories', step:100, goal:2200,  fmt:function(v){return v.toLocaleString();}, stepLabel:'100'},
+    {id:'gym',     label:'Gym',      step:15,  goal:60,    fmt:mins, stepLabel:'15 min'},
+    {id:'basilisk',label:'Basilisk', step:15,  goal:60,    fmt:mins, stepLabel:'15 min'},
+    {id:'stretch', label:'Stretch',  step:10,  goal:20,    fmt:mins, stepLabel:'10 min'}
+  ];
+  var ANCHORS=[{id:'coffee',icon:'\u2615',label:'coffee'},{id:'home',icon:'\u2302',label:'home'},{id:'walk',icon:'\u279A',label:'walk'}];
+  var MESSAGES=[
+    "You didn't wait to feel like it. You never had to.",
+    "You held the cue, not the goal. The body followed.",
+    "The walk ended and you stretched. You don't remember deciding to.",
+    "You stopped needing to picture it. You just did the next thing.",
+    "Nothing today was heroic. That's why it worked.",
+    "The coffee brewed and you squatted. That was the whole method.",
+    "You missed one and caught the next. The week held."
+  ];
+
+  function hm(v){return Math.floor(v/60)+'h '+String(v%60).padStart(2,'0')+'m';}
+  function mins(v){return v+' min';}
+  function key(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+
+  // ---- storage ----
+  var store={days:{},images:{},lastExport:null};
+  try{ var raw=localStorage.getItem(KEY); if(raw){ store=JSON.parse(raw); store.days=store.days||{}; store.images=store.images||{}; } }
+  catch(e){ console.warn('could not read saved data',e); }
+  var saveTimer=null;
+  function save(){
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(function(){
+      try{ localStorage.setItem(KEY,JSON.stringify(store)); }
+      catch(e){ console.warn('could not save',e); }
+    },120);
+  }
+
+  var todayKey=key(new Date());
+  function day(){
+    if(!store.days[todayKey]){
+      store.days[todayKey]={steps:0,sleep:0,calories:0,gym:0,basilisk:0,stretch:0,squats:[]};
+    }
+    var d=store.days[todayKey];
+    if(!Array.isArray(d.squats)) d.squats=[];
+    return d;
+  }
+
+  // ---- header ----
+  var now=new Date();
+  document.getElementById('today').textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+  var seed=Math.floor(now.getTime()/864e5);
+  document.getElementById('msg').textContent=MESSAGES[seed%MESSAGES.length];
+
+  // ---- images ----
+  function wireImage(el,slot,onSet){
+    var input=el.querySelector('input');
+    if(store.images[slot]) onSet(store.images[slot]);
+    input.addEventListener('change',function(){
+      var f=input.files && input.files[0];
+      if(!f) return;
+      shrink(f,slot==='hero'?900:400,function(dataUrl){
+        store.images[slot]=dataUrl;
+        try{ localStorage.setItem(KEY,JSON.stringify(store)); onSet(dataUrl); }
+        catch(e){ alert('That image was too large to store. Try a smaller one.'); delete store.images[slot]; }
+      });
+    });
+  }
+  function shrink(file,maxW,cb){
+    var reader=new FileReader();
+    reader.onload=function(){
+      var img=new Image();
+      img.onload=function(){
+        var scale=Math.min(1,maxW/img.width);
+        var c=document.createElement('canvas');
+        c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        cb(c.toDataURL('image/jpeg',0.72));
+      };
+      img.onerror=function(){ cb(reader.result); };
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  var hero=document.getElementById('hero');
+  wireImage(hero,'hero',function(url){
+    hero.style.backgroundImage='url('+url+')';
+    hero.classList.remove('empty');
+    document.getElementById('heroHint').style.display='none';
+  });
+  ['shotA','shotB'].forEach(function(id){
+    var el=document.getElementById(id);
+    wireImage(el,id,function(url){
+      el.style.backgroundImage='url('+url+')';
+      el.style.borderStyle='solid';
+      el.querySelector('span').style.display='none';
+    });
+  });
+  // tapping the message line cycles it without opening the photo picker
+  document.getElementById('msg').addEventListener('click',function(e){
+    e.preventDefault(); e.stopPropagation();
+    seed++; this.textContent=MESSAGES[seed%MESSAGES.length];
+  });
+
+  // ---- tiles ----
+  var grid=document.getElementById('grid');
+  var tiles={};
+  METRICS.forEach(function(m){
+    var el=document.createElement('div');
+    el.className='tile';
+    el.innerHTML=
+      '<div class="top"><span>'+m.label+'</span><span class="step">'+m.stepLabel+'</span></div>'+
+      '<div class="row">'+
+        '<button class="pm" aria-label="Less '+m.label+'">\u2212</button>'+
+        '<span class="val"></span>'+
+        '<button class="pm" aria-label="More '+m.label+'">+</button>'+
+      '</div>'+
+      '<div class="track"><span class="fill"></span></div>';
+    grid.appendChild(el);
+    var val=el.querySelector('.val'), fill=el.querySelector('.fill');
+    var btns=el.querySelectorAll('.pm');
+    tiles[m.id]=function render(){
+      var v=day()[m.id]||0;
+      val.textContent=m.fmt(v);
+      val.classList.toggle('zero',v===0);
+      var pct=Math.min(100,v/m.goal*100);
+      fill.style.width=pct+'%';
+      fill.classList.toggle('done',v>=m.goal);
+    };
+    function bump(dir){
+      var d=day();
+      d[m.id]=Math.max(0,(d[m.id]||0)+dir*m.step);
+      tiles[m.id](); paintCells(); save();
+      if(navigator.vibrate) navigator.vibrate(8);
+    }
+    // hold to repeat, accelerating — matters for steps
+    [[btns[0],-1],[btns[1],1]].forEach(function(pair){
+      var btn=pair[0], dir=pair[1], t=null, n=0;
+      function start(e){ e.preventDefault(); bump(dir); n=0; t=setInterval(function(){ n++; bump(dir*(n>12?5:n>6?2:1)); },150); }
+      function stop(){ clearInterval(t); t=null; }
+      btn.addEventListener('touchstart',start,{passive:false});
+      btn.addEventListener('touchend',stop); btn.addEventListener('touchcancel',stop);
+      btn.addEventListener('mousedown',start); btn.addEventListener('mouseup',stop); btn.addEventListener('mouseleave',stop);
+    });
+    tiles[m.id]();
+  });
+
+  // ---- squats ----
+  var squatWrap=document.getElementById('squats');
+  ANCHORS.forEach(function(a){
+    var wrap=document.createElement('div');
+    wrap.className='anc';
+    wrap.innerHTML='<button class="dot" aria-label="Squat set: '+a.label+'">'+a.icon+'</button><small>'+a.label+'</small>';
+    squatWrap.appendChild(wrap);
+    var dot=wrap.querySelector('.dot');
+    function paint(){ dot.classList.toggle('on',day().squats.indexOf(a.id)>-1); }
+    dot.addEventListener('click',function(){
+      var list=day().squats, i=list.indexOf(a.id);
+      if(i>-1) list.splice(i,1); else list.push(a.id);
+      paint(); paintCells(); save();
+      if(navigator.vibrate) navigator.vibrate(8);
+    });
+    paint();
+  });
+
+  // ---- month strip ----
+  var start=new Date(now); start.setDate(start.getDate()-24);
+  var cells=document.getElementById('cells');
+  var cellEls=[], cellKeys=[];
+  for(var i=0;i<31;i++){
+    var d=new Date(start); d.setDate(start.getDate()+i);
+    var c=document.createElement('div');
+    c.className='cell'+(key(d)===todayKey?' cell today':'');
+    if(key(d)===todayKey) c.classList.add('today');
+    cells.appendChild(c); cellEls.push(c); cellKeys.push(key(d));
+  }
+  document.getElementById('range').textContent=
+    start.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' \u2013 '+
+    new Date(start.getTime()+30*864e5).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+
+  function completion(rec){
+    if(!rec) return 0;
+    var got=0,total=METRICS.length+1;
+    METRICS.forEach(function(m){ if((rec[m.id]||0)>=m.goal) got++; });
+    if((rec.squats||[]).length>=3) got++;
+    return got/total;
+  }
+  function paintCells(){
+    cellEls.forEach(function(c,i){
+      var p=completion(store.days[cellKeys[i]]);
+      c.style.background=p>0?'var(--mark)':'var(--ink-3)';
+      c.style.opacity=p>0?(0.25+p*0.75).toFixed(2):'1';
+    });
+  }
+  paintCells();
+
+  // ---- history + export ----
+  var sheet=document.getElementById('sheet');
+  function csv(){
+    var head=['date','steps','sleep_minutes','calories','gym_minutes','basilisk_minutes','stretch_minutes','squat_sets','squat_anchors'];
+    var rows=[head.join(',')];
+    Object.keys(store.days).sort().forEach(function(k){
+      var r=store.days[k];
+      rows.push([k,r.steps||0,r.sleep||0,r.calories||0,r.gym||0,r.basilisk||0,r.stretch||0,(r.squats||[]).length,'"'+(r.squats||[]).join(' ')+'"'].join(','));
+    });
+    return rows.join('\n');
+  }
+  function buildTable(){
+    var keys=Object.keys(store.days).sort().reverse();
+    if(!keys.length) return '<p class="note">No days logged yet. Your first taps show up here.</p>';
+    var h='<table><tr><th>Date</th><th>Steps</th><th>Sleep</th><th>Cal</th><th>Gym</th><th>Bas</th><th>Str</th><th>Sq</th></tr>';
+    keys.forEach(function(k){
+      var r=store.days[k];
+      h+='<tr><td>'+k.slice(5)+'</td><td>'+(r.steps||0).toLocaleString()+'</td><td>'+hm(r.sleep||0)+'</td><td>'+(r.calories||0)+
+         '</td><td>'+(r.gym||0)+'</td><td>'+(r.basilisk||0)+'</td><td>'+(r.stretch||0)+'</td><td>'+((r.squats||[]).length)+'</td></tr>';
+    });
+    return h+'</table>';
+  }
+  document.getElementById('openSheet').addEventListener('click',function(){
+    document.getElementById('tableWrap').innerHTML=buildTable();
+    document.getElementById('lastExport').textContent=
+      store.lastExport?('Last export: '+store.lastExport):'Not exported yet.';
+    sheet.classList.add('open');
+  });
+  document.getElementById('closeSheet').addEventListener('click',function(){ sheet.classList.remove('open'); });
+  document.getElementById('exportBtn').addEventListener('click',function(){
+    var blob=new Blob([csv()],{type:'text/csv'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='directive-'+todayKey+'.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
+    store.lastExport=todayKey; save();
+    document.getElementById('lastExport').textContent='Last export: '+todayKey;
+  });
+  document.getElementById('copyBtn').addEventListener('click',function(){
+    var text=csv();
+    function done(){ document.getElementById('lastExport').textContent='Copied to clipboard.'; }
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done,fallback); }
+    else fallback();
+    function fallback(){
+      var ta=document.createElement('textarea');
+      ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); done(); }catch(e){ alert('Could not copy.'); }
+      ta.remove();
+    }
+  });
+  document.getElementById('resetDay').addEventListener('click',function(){
+    if(!confirm("Clear today's entries?")) return;
+    delete store.days[todayKey];
+    METRICS.forEach(function(m){ tiles[m.id](); });
+    squatWrap.querySelectorAll('.dot').forEach(function(d){ d.classList.remove('on'); });
+    paintCells(); save();
+    document.getElementById('tableWrap').innerHTML=buildTable();
+  });
+
+  // keep the date current if the app stays open overnight
+  setInterval(function(){
+    var k=key(new Date());
+    if(k!==todayKey) location.reload();
+  },60000);
+
+  // stop double-tap zoom on the counters
+  document.addEventListener('gesturestart',function(e){ e.preventDefault(); });
+})();
+</script>
+</body>
+</html>
