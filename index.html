@@ -149,7 +149,7 @@
   </label>
   <div class="shots">
     <label class="shot" id="shotA"><input type="file" accept="image/*"><span>BASELINE</span></label>
-    <label class="shot" id="shotB"><input type="file" accept="image/*" capture="user"><span>CURRENT</span></label>
+    <label class="shot" id="shotB"><input type="file" accept="image/*"><span>GOAL</span></label>
   </div>
 </div>
 
@@ -199,7 +199,7 @@
   var METRICS=[
     {id:'steps',    label:'STEPS',    step:500, goal:15000, fmt:function(v){return v.toLocaleString();}, hint:'500', auto:true},
     {id:'sleep',    label:'SLEEP',    step:15,  goal:480,   fmt:hm,   hint:'15m', auto:true},
-    {id:'calories', label:'CALORIES', step:100, goal:2200,  fmt:function(v){return v.toLocaleString();}, hint:'100'},
+    {id:'calories', label:'CALORIES', step:20,  goal:2200,  fmt:function(v){return v.toLocaleString();}, hint:'20'},
     {id:'gym',      label:'GYM',      step:15,  goal:60,    fmt:mins, hint:'15m'},
     {id:'basilisk', label:'BASILISK', step:15,  goal:60,    fmt:mins, hint:'15m'},
     {id:'stretch',  label:'STRETCH',  step:10,  goal:20,    fmt:mins, hint:'10m'}
